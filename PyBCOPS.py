@@ -37,11 +37,21 @@ def prediction(models, x, y, labels, xte):
 
     for k in range(K):    
         if np.sum(y == labels[k]) > 0:
-            s[:,k] = models[k].predict(x)
-            ste[:,k] = models[k].predict(xte)
+            temp1 = models[k].predict_proba(x)
+            temp2 = models[k].predict_proba(xte)
+
+            try:
+                temp3 = np.shape(temp1)[1]
+            except IndexError:
+                s[:,k] = temp1
+                ste[:,k] = temp2
+            else:
+                s[:,k] = temp1[:,temp3-1]
+                ste[:,k] = temp2[:,temp3-1]
 
     prediction_conformal = conformal_scores(ste = ste, s = s, y = y, labels = labels)
     return {'prediction_conformal':prediction_conformal, 'score_test':ste, 'score_train':s}
+
 
 def BCOPS(classifier, x1, y1, xte1, x2, y2, xte2, labels, *classifier_args, **classifier_kargs):
     # Training
@@ -54,7 +64,7 @@ def BCOPS(classifier, x1, y1, xte1, x2, y2, xte2, labels, *classifier_args, **cl
     return {'conformal_scores1':prediction1, 'conformal_scores2':prediction2}
 
 def evaluate_conformal(prediction, yte, labels, alpha=0.05):
-    labels_te = np.unique(labels)
+    labels_te = np.unique(yte)
     res = np.zeros((len(labels_te), len(labels)))
 
     for i in range(len(labels_te)):
@@ -63,7 +73,7 @@ def evaluate_conformal(prediction, yte, labels, alpha=0.05):
     res = pd.DataFrame(res)
 
     res.columns = labels
-    res.index = labels_te         
+    res.index = labels_te
     return res
 
 def main():
