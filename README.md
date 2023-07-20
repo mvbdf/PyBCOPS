@@ -4,6 +4,6 @@ Implementação em Python do algoritmo BCOPS proposto em Guan, L. & Tibshirani, 
 
 Com o algoritmo BCOPS, nosso objetivo é detectar observações do conjunto de teste cuja classe verdadeira não estava presente durante o treinamento. O Notebook Python exemplo1.ipynb contém uma demonstração do uso do algoritmo. São necessárias as bibliotecas NumPy, Pandas, Matplotlib, Seaborn e scikit-learn.
 
-Essa biblioteca visa a simplificação do uso do algoritmo BCOPS e foi implementada para ser utilizada em conjunto com o pacote scikit-learn.
+Essa biblioteca visa a simplificação do uso do algoritmo BCOPS e foi projetada para ser utilizada em conjunto com o pacote scikit-learn.
 
 Baseado na implementação em R disponível em https://github.com/LeyingGuan/BCOPS.
