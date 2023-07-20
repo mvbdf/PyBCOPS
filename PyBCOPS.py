@@ -133,3 +133,47 @@ def evaluate_conformal(prediction, y_test, labels, alpha=0.05):
     results.columns = labels
     results.index = labels_test
     return results
+
+def test():
+    from sklearn.ensemble import RandomForestClassifier
+
+    np.random.seed(123)
+
+    X_train = np.zeros((1000, 10))
+    y_train = np.zeros(1000, dtype = int)
+
+    X_test = np.zeros((1500, 10))
+    y_test = np.zeros(1500, dtype = int)
+
+    for i in range(500):
+        ## Dados para o treino
+        # Classe 0
+        X_train[i,:] = np.random.normal(0, 1, 10)
+        y_train[i] = 0
+        
+        # Classe 1
+        X_train[i + 500,] = np.concatenate([np.random.normal(3, 0.5, 1), np.random.normal(0, 1, 9)])
+        y_train[i + 500] = 1
+        
+        ## Dados para o teste
+        # Classe 0
+        X_test[i,:] = np.random.normal(0, 1, 10)
+        y_test[i] = 0
+        
+        # Classe 1
+        X_test[i + 500,:] = np.concatenate([np.random.normal(3, 0.5, 1), np.random.normal(0, 1, 9)])
+        y_test[i + 500] = 1
+        
+        # Classe 2 (outliers)
+        X_test[i + 1000,:] = np.concatenate([np.random.normal(0, 1, 1),
+                                            np.random.normal(3, 0.5, 1),
+                                            np.random.normal(0, 1, 8)])
+        y_test[i + 1000] = 2
+
+    prediction_conformal = BCOPS(RandomForestClassifier, X_train, y_train, X_test)
+
+    evaluation = evaluate_conformal(prediction_conformal, y_test, np.unique(y_train))
+    print(evaluation)
+
+if __name__ == '__main__':
+    test()
