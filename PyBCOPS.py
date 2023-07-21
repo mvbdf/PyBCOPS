@@ -136,12 +136,10 @@ def evaluate_conformal(prediction, y_test, labels, alpha=0.05):
 
 def prediction_sets(conformal_scores, labels, alpha=0.05):
     """ Returns a list with the predictions sets for the test data calculated at a given alpha """
-    n = np.shape(conformal_scores)[0]
-    y_pred = [None]*n
-    
-    for i in range(n):
-        pred = (conformal_scores[i,:] > alpha)
-        y_pred[i] = np.ndarray.tolist(labels[pred])
+    n = np.shape(conformal_scores)[0]    
+    pred = conformal_scores > alpha
+    y_pred = [np.ndarray.tolist(labels[pred[i]]) for i in range(n)]
+
     return y_pred
 
 
