@@ -23,10 +23,8 @@ def conformal_scores(s_test, s_train, y_train, labels):
 
 def train(classifier, x_train, y_train, labels, x_test, *classifier_args, **classifier_kargs):
     """ 
-    Returns
-    -------
-    models : a list of trained models that is are used to predict
-    the BCOPs score for each new observation
+    Returns a list of trained models that are used to predict the
+    BCOPs score for each new observation
     """
     K = len(labels)
     models = [None]*K
@@ -55,7 +53,7 @@ def prediction(models, x_train, y_train, labels, x_test):
     the value evaluated at a test sample using score function for a training class.
 
     scores_train : a n by K matrix for n training samples, each entry is the
-    value evaluated at a training sample using score function for atraining class.
+    value evaluated at a training sample using score function for a training class.
     """
     K = len(labels)
     s = np.zeros((len(y_train), K))
@@ -86,6 +84,7 @@ def BCOPS(classifier, X_train, y_train, X_test, *classifier_args, **classifier_k
     -------
     prediction_conformal : the conformal scores for all the test observations.
     """
+    
     # Data-split
     foldid = np.random.randint(1, 3, len(y_train))
     foldid_te = np.random.randint(1, 3, np.shape(X_test)[0])
@@ -134,46 +133,27 @@ def evaluate_conformal(prediction, y_test, labels, alpha=0.05):
     results.index = labels_test
     return results
 
-def test():
-    from sklearn.ensemble import RandomForestClassifier
 
-    np.random.seed(123)
+def prediction_sets(conformal_scores, labels, alpha):
+    """ Returns a list with the predictions sets for the test data calculated at a given alpha """
+    n = np.shape(conformal_scores)[0]
+    y_pred = [None]*n
+    
+    for i in range(n):
+        pred = (conformal_scores[i,:] > alpha)
+        y_pred[i] = np.ndarray.tolist(labels[pred])
+    return y_pred
 
-    X_train = np.zeros((1000, 10))
-    y_train = np.zeros(1000, dtype = int)
 
-    X_test = np.zeros((1500, 10))
-    y_test = np.zeros(1500, dtype = int)
+def abstention_rate(y_pred, y_test, labels):
+    """ Returns the abstention rate for the outlier observations """
+    abstention_counter = 0
+    outlier_counter = 0
 
-    for i in range(500):
-        ## Dados para o treino
-        # Classe 0
-        X_train[i,:] = np.random.normal(0, 1, 10)
-        y_train[i] = 0
-        
-        # Classe 1
-        X_train[i + 500,] = np.concatenate([np.random.normal(3, 0.5, 1), np.random.normal(0, 1, 9)])
-        y_train[i + 500] = 1
-        
-        ## Dados para o teste
-        # Classe 0
-        X_test[i,:] = np.random.normal(0, 1, 10)
-        y_test[i] = 0
-        
-        # Classe 1
-        X_test[i + 500,:] = np.concatenate([np.random.normal(3, 0.5, 1), np.random.normal(0, 1, 9)])
-        y_test[i + 500] = 1
-        
-        # Classe 2 (outliers)
-        X_test[i + 1000,:] = np.concatenate([np.random.normal(0, 1, 1),
-                                            np.random.normal(3, 0.5, 1),
-                                            np.random.normal(0, 1, 8)])
-        y_test[i + 1000] = 2
+    for i in range(len(y_pred)):
+        if y_test[i] not in labels:
+            outlier_counter += 1
+            if not y_pred[i]:
+                abstention_counter += 1
 
-    prediction_conformal = BCOPS(RandomForestClassifier, X_train, y_train, X_test)
-
-    evaluation = evaluate_conformal(prediction_conformal, y_test, np.unique(y_train))
-    print(evaluation)
-
-if __name__ == '__main__':
-    test()
+    return abstention_counter / outlier_counter
