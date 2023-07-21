@@ -134,7 +134,7 @@ def evaluate_conformal(prediction, y_test, labels, alpha=0.05):
     return results
 
 
-def prediction_sets(conformal_scores, labels, alpha):
+def prediction_sets(conformal_scores, labels, alpha=0.05):
     """ Returns a list with the predictions sets for the test data calculated at a given alpha """
     n = np.shape(conformal_scores)[0]
     y_pred = [None]*n
