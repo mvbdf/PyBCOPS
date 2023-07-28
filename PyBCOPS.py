@@ -4,16 +4,15 @@ import pandas as pd
 
 def conformalscore(s_test, s_train):
     """ Adapted from conformalscore.cpp """
-    return [np.sum(s_test[i] >= s_train) for i in range(len(s_test))]
+    return [np.sum(i >= s_train) for i in s_test]
 
 
 def conformal_scores(s_test, s_train, y_train, labels):
     """ Conformal prediction for any given scores """
-    K = len(labels)
-    prediction_test = np.zeros((np.shape(s_test)[0], K))
+    prediction_test = np.zeros((np.shape(s_test)[0], np.shape(labels)[0]))
 
-    for k in range(K):
-        sk = s_train[y_train == labels[k], k]
+    for k, label in enumerate(labels):
+        sk = s_train[y_train == label, k]
 
         prediction_test[:,k] = conformalscore(s_test[:,k], sk)
         prediction_test[:,k] = (prediction_test[:,k] + 1) / (len(sk) + 1)
@@ -26,13 +25,12 @@ def train(classifier, x_train, y_train, labels, x_test, *classifier_args, **clas
     Returns a list of trained models that are used to predict the
     BCOPs score for each new observation
     """
-    K = len(labels)
-    models = [None]*K
+    models = [None]*len(labels)
 
-    for k in range(K):
-        xk = np.concatenate((x_test, x_train[y_train == labels[k],:]))
+    for k, label in enumerate(labels):
+        xk = np.concatenate((x_test, x_train[y_train == label,:]))
         yk = np.concatenate((np.repeat(0, np.shape(x_test)[0]),
-                             np.repeat(1, np.sum(y_train == labels[k]))))
+                             np.repeat(1, np.sum(y_train == label))))
         
         models[k] = classifier(*classifier_args, **classifier_kargs).fit(xk, yk)
 
@@ -59,10 +57,10 @@ def prediction(models, x_train, y_train, labels, x_test):
     s = np.zeros((len(y_train), K))
     ste = np.zeros((np.shape(x_test)[0], K))
 
-    for k in range(K):    
+    for k, model in enumerate(models):
         if np.sum(y_train == labels[k]) > 0:
-            temp1 = models[k].predict_proba(x_train)
-            temp2 = models[k].predict_proba(x_test)
+            temp1 = model.predict_proba(x_train)
+            temp2 = model.predict_proba(x_test)
 
             try:
                 temp3 = np.shape(temp1)[1]
@@ -80,7 +78,7 @@ def prediction(models, x_train, y_train, labels, x_test):
 def BCOPS(classifier, X_train, y_train, X_test, *classifier_args, **classifier_kargs):
     """BCOPS function that does both training and prediction. 
     
-    Returns 
+    Returns
     -------
     prediction_conformal : the conformal scores for all the test observations.
     """
@@ -124,8 +122,8 @@ def evaluate_conformal(prediction, y_test, labels, alpha=0.05):
     labels_test = np.unique(y_test)
     results = np.zeros((len(labels_test), len(labels)))
 
-    for i in range(len(labels_test)):
-        ii = np.where(y_test == labels_test[i])
+    for i, label in enumerate(labels_test):
+        ii = np.where(y_test == label)
         results[i,:] = np.apply_along_axis(np.mean, 1, prediction[ii,:] >= alpha)
     results = pd.DataFrame(results)
 
@@ -135,10 +133,9 @@ def evaluate_conformal(prediction, y_test, labels, alpha=0.05):
 
 
 def prediction_sets(conformal_scores, labels, alpha=0.05):
-    """ Returns a list with the predictions sets for the test data calculated at a given alpha """
-    n = np.shape(conformal_scores)[0]    
+    """ Returns a list with the predictions sets for the test data calculated at a given alpha """ 
     pred = conformal_scores > alpha
-    y_pred = [np.ndarray.tolist(labels[pred[i]]) for i in range(n)]
+    y_pred = [np.ndarray.tolist(labels[i]) for i in pred]
 
     return y_pred
 
@@ -148,10 +145,10 @@ def abstention_rate(y_pred, y_test, labels):
     abstention_counter = 0
     outlier_counter = 0
 
-    for i in range(len(y_pred)):
-        if y_test[i] not in labels:
+    for real_class, pred in zip(y_test, y_pred):
+        if real_class not in labels:
             outlier_counter += 1
-            if not y_pred[i]:
+            if not pred:
                 abstention_counter += 1
 
     return abstention_counter / outlier_counter
