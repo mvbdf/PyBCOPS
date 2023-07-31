@@ -131,7 +131,7 @@ def BCOPS(classifier, X_train, y_train, X_test, *classifier_args, **classifier_k
     return prediction_conformal
 
 
-def evaluate_conformal(prediction, y_test, labels, alpha=0.05):
+def evaluate_conformal(conformal_scores, y_test, labels, alpha=0.05):
     """
     Returns
     -------
@@ -145,7 +145,7 @@ def evaluate_conformal(prediction, y_test, labels, alpha=0.05):
 
     for i, label in enumerate(labels_test):
         ii = np.where(y_test == label)
-        results[i,:] = np.apply_along_axis(np.mean, 1, prediction[ii,:] >= alpha)
+        results[i,:] = np.apply_along_axis(np.mean, 1, conformal_scores[ii,:] >= alpha)
     results = pd.DataFrame(results)
 
     results.columns = labels
