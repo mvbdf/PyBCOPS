@@ -1,31 +1,31 @@
 import numpy as np
 import pandas as pd
 
-from ctypes import CDLL, POINTER, c_int, c_float
+# from ctypes import CDLL, POINTER, c_int, c_float
 
 
-libscore = CDLL("./libscore.so")
-libscore.conformalscore.argtypes = [
-    POINTER(c_float),
-    POINTER(c_float),
-    POINTER(c_int),
-    c_int,
-    c_int
-]
-
-def conformalscore(s_test, s_train):
-    size_ste = len(s_test)
-    size_s = len(s_train)
-    ste = (c_float * size_ste)(*s_test)
-    s = (c_float * size_s)(*s_train)
-    count = (c_int * size_ste)()
-    libscore.conformalscore(ste, s, count, size_ste, size_s)
-    return np.array(count)
-
+# libscore = CDLL("./libscore.so")
+# libscore.conformalscore.argtypes = [
+#     POINTER(c_float),
+#     POINTER(c_float),
+#     POINTER(c_int),
+#     c_int,
+#     c_int
+# ]
 
 # def conformalscore(s_test, s_train):
-#     """ Adapted from conformalscore.cpp but pretty much as fast as the C version """
-#     return [np.sum(i >= s_train) for i in s_test]
+#     size_ste = len(s_test)
+#     size_s = len(s_train)
+#     ste = (c_float * size_ste)(*s_test)
+#     s = (c_float * size_s)(*s_train)
+#     count = (c_int * size_ste)()
+#     libscore.conformalscore(ste, s, count, size_ste, size_s)
+#     return np.array(count)
+
+
+def conformalscore(s_test, s_train):
+    """ Adapted from conformalscore.c but pretty much as fast as the C version """
+    return [np.sum(i >= s_train) for i in s_test]
 
 
 def conformal_scores(s_test, s_train, y_train, labels):
